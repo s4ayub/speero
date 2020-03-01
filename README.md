@@ -1,0 +1,2 @@
+# speero
+flask, react, sqlite
