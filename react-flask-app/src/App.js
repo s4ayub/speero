@@ -93,18 +93,19 @@ function Topic() {
   // get from `useParams()`.
   let { topicId } = useParams();
 
-  const [currentTime, setCurrentTime] = useState(0);
+  const [currentTime, setCurrentTime] = useState({"desc": ""});
 
   useEffect(() => {
-    fetch('/time').then(res => res.json()).then(data => {
-      setCurrentTime(data.time);
+    fetch(`/patients/${topicId}`).then(res => res.json()).then(data => {
+      console.log(data);
+      setCurrentTime(data);
     });
   }, []);
 
   return (
     <div>
       <h3>{topicId}</h3>
-      <h2>current time is {currentTime}</h2>
+      <h2>current time is {currentTime.desc}</h2>
     </div>
   );
 }
