@@ -96,16 +96,24 @@ function Topic() {
   const [currentTime, setCurrentTime] = useState({"desc": ""});
 
   useEffect(() => {
-    fetch(`/patients/${topicId}`).then(res => res.json()).then(data => {
+    fetch(`/audio/${topicId}`).then(res => res.json()).then(data => {
       console.log(data);
       setCurrentTime(data);
     });
   }, []);
 
+  function playAudio(json_base64string) {
+    var snd = new Audio("data:audio/wav;base64," + json_base64string.substring(2, json_base64string.length-1));
+    snd.play();
+  };
+
   return (
     <div>
       <h3>{topicId}</h3>
-      <h2>current time is {currentTime.desc}</h2>
+      <h2>current time is {currentTime.languageCode}</h2>
+      <button onClick={() => playAudio(currentTime.content)}>
+        Activate lasers
+      </button>
     </div>
   );
 }
