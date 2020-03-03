@@ -17,7 +17,6 @@ export default function App() {
     <div className="App">
     <header className="App-header">
       <Router>
-
         nav bar??
         <ul>
           <li>
@@ -96,22 +95,24 @@ function Topic() {
   const [currentTime, setCurrentTime] = useState({"desc": ""});
 
   useEffect(() => {
-    fetch(`/audio/${topicId}`).then(res => res.json()).then(data => {
+    fetch(`/patients/${topicId}`).then(res => res.json()).then(data => {
       console.log(data);
       setCurrentTime(data);
     });
   }, []);
 
-  function playAudio(json_base64string) {
-    var snd = new Audio("data:audio/wav;base64," + json_base64string.substring(2, json_base64string.length-1));
-    snd.play();
-  };
+  // put sound in state,  so i can change it
+
+  // function playAudio(json_base64string) {
+  //   var snd = new Audio("data:audio/wav;base64," + json_base64string.substring(2, json_base64string.length-1));
+  //   snd.play();
+  // };
 
   return (
     <div>
       <h3>{topicId}</h3>
-      <h2>current time is {currentTime.languageCode}</h2>
-      <button onClick={() => playAudio(currentTime.content)}>
+      <p>henlo pren</p>
+      <button onClick={() => console.log(currentTime)}>
         Activate lasers
       </button>
     </div>
