@@ -22,7 +22,7 @@ sclient_config = {
 }
 
 sclient = speech_v1.SpeechClient()
-#p = MyPredictor.from_path(".")
+p = MyPredictor.from_path(".")
 
 @app.route("/patients/<patient_id>")
 def get_patient_metrics(patient_id):
@@ -149,7 +149,10 @@ def latest_metrics_collected(audio_filepath, metrics):
 def get_latest_metric(audio_filepath, spectrograms_filepath):
     global p
     img_paths = glob.glob(spectrograms_filepath)
-    results = p.predict(img_paths)
+    results = []
+
+    for img_path in img_paths:
+        results = results + p.predict([img_path])
 
     # Note down the segments (4s clips) that saw stutters
     stutter_segments_record = ""

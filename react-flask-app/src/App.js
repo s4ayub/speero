@@ -96,6 +96,7 @@ function Metrics() {
 
   useEffect(() => {
     fetch(`/patients/${patientId}`).then(res => res.json()).then(data => {
+      debugger;
       setMetrics(data);
     });
   }, []);
@@ -104,9 +105,13 @@ function Metrics() {
   return (
     <div>
       <p>metric guy</p>
-      <button onClick={() => console.log(metrics)}>
-        Activate metrics
-      </button>
+      {metrics === 0 ? (
+        <p>loading guy</p>
+      ) : (
+        <button onClick={() => console.log(metrics)}>
+          Activate lasers
+        </button>
+      )}
     </div>
   );
 }
@@ -118,6 +123,7 @@ function Transcriptions() {
 
   useEffect(() => {
     fetch(`/transcription/${patientId}`).then(res => res.json()).then(data => {
+      debugger;
       setTranscriptions(data);
     });
   }, []);
@@ -125,9 +131,13 @@ function Transcriptions() {
   return (
     <div>
       <p>transcription guy</p>
-      <button onClick={() => console.log(transcriptions)}>
-        Activate transcriptions
-      </button>
+      {transcriptions === 0 ? (
+        <p>loading guy</p>
+      ) : (
+        <button onClick={() => console.log(transcriptions)}>
+          Activate lasers
+        </button>
+      )}
     </div>
   );
 }
@@ -139,11 +149,13 @@ function SessionAudio() {
 
   useEffect(() => {
     fetch(`/audio/${patientId}`).then(res => res.json()).then(data => {
+      debugger;
       setEncodedAudio(data);
     });
   }, []);
 
   function playAudio(json_base64string) {
+    debugger;
     var snd = new Audio("data:audio/wav;base64," + json_base64string.substring(2, json_base64string.length-1));
     snd.play();
   };
@@ -151,9 +163,13 @@ function SessionAudio() {
   return (
     <div>
       <p>audio guy</p>
-      <button onClick={() => playAudio(encodedAudio.content)}>
-        Activate lasers
-      </button>
+      {encodedAudio === 0 ? (
+        <p>loading guy</p>
+      ) : (
+        <button onClick={() => playAudio(encodedAudio.content)}>
+          Activate lasers
+        </button>
+      )}
     </div>
   );
 }
