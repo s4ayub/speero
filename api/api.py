@@ -4,11 +4,13 @@ import glob
 import os
 import os.path
 from os import path
+from datetime import datetime
 
+import pandas as pd
 from flask import Flask
+from flask import request
 from google.cloud import speech_v1
 from MyPredictor import MyPredictor
-import pandas as pd
 
 app = Flask(__name__)
 
@@ -20,7 +22,7 @@ sclient_config = {
 }
 
 sclient = speech_v1.SpeechClient()
-p = MyPredictor.from_path(".")
+#p = MyPredictor.from_path(".")
 
 @app.route("/patients/<patient_id>")
 def get_patient_metrics(patient_id):
@@ -101,7 +103,7 @@ def get_patient_transcription(patient_id):
 
     return build_transcription_payload(wr_df, pr_df, transcription_df)
 
-@app.route("/audio/<patient_id>")
+@app.route("/audio/<patient_id>", methods=['GET'])
 def get_patient_audio(patient_id):
     audio_filepath = get_latest_file_in_dir(
         "data/%s/audio/*.wav" % (patient_id)
@@ -119,6 +121,18 @@ def get_patient_audio(patient_id):
     }
 
     return data
+
+@app.route("/audio", methods=['POST'])
+def create_patient_audio():
+    wav_data = base64.b64decode(request.form["content"])
+    new_audio_path = "data/%s/audio/%s.wav" % (
+        request.form["patient_id"],
+        datetime.now().strftime("%b-%d-%Y-%H-%M-%S-%f")
+    )
+    with open(new_audio_path, mode='bx') as f:
+        f.write(wav_data)
+
+    return request.form["patient_id"], 201
 
 def get_latest_file_in_dir(filepath):
     list_of_files = glob.glob(filepath)
