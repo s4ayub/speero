@@ -102,3 +102,89 @@ class MyPredictor(object):
         """
         model = keras.models.load_model(model_dir, compile=True)
         return cls(model)
+
+    @classmethod
+    def find_word_repetitions(cls, path_transcript):
+        read_file_=open(path_transcript,"r")
+        lines=read_file_.readlines();
+
+        word_prev  = ""
+        start_prev = 0
+
+        # note that the first line of wr will always be trash
+        # but it gets filtered when we write to files
+        wr = []
+        num_rep = 0
+
+        for i, line in enumerate(lines):
+            tokens = line.split()
+
+            if i == 0:
+                word_prev = str(tokens[0])
+
+            if word_prev == str(tokens[0]):
+                if(num_rep == 0):
+                    wr.append([word_prev, start_prev, ""])
+                num_rep = num_rep + 1
+            else:
+                if num_rep != 0:
+                    #num_times.append(num_rep)
+                    wr[len(wr)-1][2] = num_rep
+                num_rep=0
+                word_prev = str(tokens[0])
+                start_prev = str(tokens[1])
+
+        if (num_rep != 0):
+            wr[len(wr)-1][2] = num_rep
+
+        return wr
+
+    @classmethod
+    def find_phrase_repetitions(cls, path_transcript):
+        read_file_=open(path_transcript,"r")
+        lines=read_file_.readlines();
+
+        phrase_words = []
+        reps_found = 0
+        check_next = False
+        start_t = 0
+
+        phr = []
+        phr.append(["", "", ""])
+
+        phrase_words.append(str(lines[0].split()[0]))
+        phrase_words.append(str(lines[1].split()[0]))
+        start_ph1 = str(lines[0].split()[1])
+        start_ph2 = str(lines[1].split()[1])
+
+        for i in range(2, len(lines)-1):
+            tokens = lines[i].split()
+
+            if check_next:
+                if(phrase_words[1] == str(tokens[0])):
+                    if(reps_found == 0):
+                        phr.append([phrase_words[0]+" "+phrase_words[1], start_ph1, ""]) # FIGURE OUT THE REST
+                    reps_found += 1
+                else:
+                    tmp = phrase_words[0]
+                    phrase_words[0] = phrase_words[1]
+                    phrase_words[1] =tmp
+                    start_ph1 = start_ph2
+                    start_ph2 = str(tokens[1])
+                    if(reps_found != 0):
+                        phr[len(phr)-1][2] = reps_found
+                    reps_found = 0
+                check_next = False
+            else: # len(phrase_words) == 2:
+                if(phrase_words[0] != str(tokens[0])):
+                    phrase_words[0]=phrase_words[1]
+                    phrase_words[1]=str(tokens[0])
+                    start_ph1 = start_ph2
+                    start_ph2 = str(tokens[1])
+                    if(reps_found != 0):
+                        phr[len(phr)-1][2] = reps_found
+                    reps_found = 0
+                else:
+                    check_next = True
+
+        return phr

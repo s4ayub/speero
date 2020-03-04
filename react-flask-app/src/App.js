@@ -34,7 +34,7 @@ export default function App() {
             <Home />
           </Route>
           <Route path="/patients">
-            <Topics />
+            <Patients />
           </Route>
         </Switch>
       </div>
@@ -53,7 +53,7 @@ function Home() {
   );
 }
 
-function Topics() {
+function Patients() {
   // The `path` lets us build <Route> paths that are
   // relative to the parent route, while the `url` lets
   // us build relative links.
@@ -77,42 +77,81 @@ function Topics() {
           </ul>
           <h3>Please select a patient.</h3>
         </Route>
-        <Route path={`${path}/:topicId`}>
-          <Topic />
+        <Route path={`${path}/:patientId`}>
+          <Metrics />
+          <hr />
+          <Transcriptions />
+          <hr />
+          <SessionAudio />
         </Route>
       </Switch>
     </div>
   );
 }
 
-function Topic() {
-  // The <Route> that rendered this component has a
-  // path of `/topics/:topicId`. The `:topicId` portion
-  // of the URL indicates a placeholder that we can
-  // get from `useParams()`.
-  let { topicId } = useParams();
+function Metrics() {
+  let { patientId } = useParams();
 
-  const [currentTime, setCurrentTime] = useState({"desc": ""});
+  const [metrics, setMetrics] = useState(0);
 
   useEffect(() => {
-    fetch(`/patients/${topicId}`).then(res => res.json()).then(data => {
-      console.log(data);
-      setCurrentTime(data);
+    fetch(`/patients/${patientId}`).then(res => res.json()).then(data => {
+      setMetrics(data);
     });
   }, []);
 
-  // put sound in state,  so i can change it
-
-  // function playAudio(json_base64string) {
-  //   var snd = new Audio("data:audio/wav;base64," + json_base64string.substring(2, json_base64string.length-1));
-  //   snd.play();
-  // };
 
   return (
     <div>
-      <h3>{topicId}</h3>
-      <p>henlo pren</p>
-      <button onClick={() => console.log(currentTime)}>
+      <p>metric guy</p>
+      <button onClick={() => console.log(metrics)}>
+        Activate metrics
+      </button>
+    </div>
+  );
+}
+
+function Transcriptions() {
+  let { patientId } = useParams();
+
+  const [transcriptions, setTranscriptions] = useState(0);
+
+  useEffect(() => {
+    fetch(`/transcription/${patientId}`).then(res => res.json()).then(data => {
+      setTranscriptions(data);
+    });
+  }, []);
+
+  return (
+    <div>
+      <p>transcription guy</p>
+      <button onClick={() => console.log(transcriptions)}>
+        Activate transcriptions
+      </button>
+    </div>
+  );
+}
+
+function SessionAudio() {
+  let { patientId } = useParams();
+
+  const [encodedAudio, setEncodedAudio] = useState(0);
+
+  useEffect(() => {
+    fetch(`/audio/${patientId}`).then(res => res.json()).then(data => {
+      setEncodedAudio(data);
+    });
+  }, []);
+
+  function playAudio(json_base64string) {
+    var snd = new Audio("data:audio/wav;base64," + json_base64string.substring(2, json_base64string.length-1));
+    snd.play();
+  };
+
+  return (
+    <div>
+      <p>audio guy</p>
+      <button onClick={() => playAudio(encodedAudio.content)}>
         Activate lasers
       </button>
     </div>

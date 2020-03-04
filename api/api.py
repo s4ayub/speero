@@ -2,16 +2,24 @@ import time
 import base64
 import glob
 import os
+import os.path
+from os import path
 
 from flask import Flask
+from google.cloud import speech_v1
 from MyPredictor import MyPredictor
 import pandas as pd
 
-import tensorflow as tf
-from tensorflow import keras
-
 app = Flask(__name__)
 
+audio_path_in_gcloud = 'gs://speero-aiplatform/audio/'
+sclient_config = {
+    "enable_word_time_offsets": True,
+    "language_code": "en-GB",
+    "sample_rate_hertz": 44100,
+}
+
+sclient = speech_v1.SpeechClient()
 p = MyPredictor.from_path(".")
 
 @app.route("/patients/<patient_id>")
@@ -36,6 +44,62 @@ def get_patient_metrics(patient_id):
     metrics.to_csv(patient_dir + "sound_repetition.csv", index = False)
 
     return metrics.to_dict('index')
+
+@app.route("/transcription/<patient_id>")
+def get_patient_transcription(patient_id):
+    global sclient
+    global sclient_config
+
+    patient_dir = "data/%s/" % (patient_id)
+    latest_recorded_audio_path = get_latest_file_in_dir(
+        patient_dir + "audio/*.wav"
+    )
+    session_timestamp = get_session_timestamp(latest_recorded_audio_path)
+    transcription_dir_path = patient_dir + "transcriptions/" + session_timestamp
+
+    # check if dir already exists for this session
+    if path.exists(transcription_dir_path):
+        wr_df = pd.read_csv(transcription_dir_path + "/wr.csv")
+        pr_df = pd.read_csv(transcription_dir_path + "/pr.csv")
+        transcription_df = pd.read_csv(transcription_dir_path + "/transcription.csv")
+
+        return build_transcription_payload(wr_df, pr_df, transcription_df)
+
+    # Create transcription data for this session
+    # Change the "1.wav" part when the tcp socket can write audio`
+    # files to gcloud buckets.
+    audio = {"uri": audio_path_in_gcloud + patient_id + "/1.wav"}
+    operation = sclient.long_running_recognize(sclient_config, audio)
+    response = operation.result()
+
+    os.mkdir(transcription_dir_path)
+    path_to_transcription_file = transcription_dir_path + "/transcription.txt"
+
+    writeFile = open(path_to_transcription_file,'w')
+    transcription_df = pd.DataFrame(columns=['word','start_time','end_time'])
+    for result in response.results:
+        alternative = result.alternatives[0]
+        for i, word in enumerate(alternative.words):
+            writeFile.write(word.word + " " + str(word.start_time.seconds) + " " + str(word.end_time.seconds) +  "\n")
+            transcription_df = transcription_df.append({
+                "word": word.word,
+                "start_time": str(word.start_time.seconds),
+                "end_time": str(word.end_time.seconds),
+            }, ignore_index=True)
+    writeFile.close()
+    transcription_df.to_csv(transcription_dir_path + "/transcription.csv", index = False)
+
+    wr = MyPredictor.find_word_repetitions(path_to_transcription_file)
+    pr = MyPredictor.find_phrase_repetitions(path_to_transcription_file)
+
+    # First row is always messed up
+    wr.pop(0)
+    pr.pop(0)
+
+    wr_df = write_pr_wr_data(wr, transcription_dir_path + "/wr.csv")
+    pr_df = write_pr_wr_data(pr, transcription_dir_path + "/pr.csv")
+
+    return build_transcription_payload(wr_df, pr_df, transcription_df)
 
 @app.route("/audio/<patient_id>")
 def get_patient_audio(patient_id):
@@ -90,3 +154,20 @@ def get_latest_metric(audio_filepath, spectrograms_filepath):
 
 def get_session_timestamp(audio_filepath):
     return audio_filepath.split("/")[-1][:-4]
+
+def write_pr_wr_data (wr_or_pr_data, transcription_wr_or_pr_path):
+    df = pd.DataFrame(columns=['word','start_time','num_reps'])
+
+    for i, data in enumerate(wr_or_pr_data):
+        df.loc[i] = [str(data[0]), str(data[1]), str(data[2])]
+
+    df.to_csv(transcription_wr_or_pr_path, index=False)
+
+    return df
+
+def build_transcription_payload(wr_df, pr_df, transcription_df):
+    return {
+        "wr": wr_df.to_dict('index'),
+        "pr": pr_df.to_dict('index'),
+        "transcription": transcription_df.to_dict('index'),
+    }
