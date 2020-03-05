@@ -129,6 +129,7 @@ function Metrics(props) {
 
     useEffect(() => {
       fetch(`/metric/${patientId}`).then(res => res.json()).then(data => {
+        console.log(data);
         setMetrics(data);
       });
     }, []);
@@ -349,7 +350,7 @@ function getRanges(stutter_segments) {
 }
 
 const linedata = metrics => {
-    const allKeys= Object.keys(metrics).sort();
+    const allKeys= Object.keys(metrics);
     const allData = [];
     const allLabels = [];
 

@@ -35,6 +35,7 @@ def get_patient_metrics(patient_id):
         dtype={'stutter_segments': str}
     )
     if latest_metrics_collected(latest_recorded_audio_path, metrics):
+        print(metrics)
         return metrics.to_dict('index')
 
     # Spectrogram prediction
@@ -45,6 +46,7 @@ def get_patient_metrics(patient_id):
     metrics = metrics.append(latest_metric, ignore_index=True)
     metrics.to_csv(patient_dir + "sound_repetition.csv", index = False)
 
+    print(metrics)
     return metrics.to_dict('index')
 
 @app.route("/transcription/<patient_id>")
