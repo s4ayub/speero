@@ -73,13 +73,13 @@ class MyPredictor(object):
         """Maps result from model to a 0 (no stutter) or 1 (stutter) value.
 
         Args:
-            output: numpy array, index 0 is % stutter, index 1 is % no stutter.
+            output: numpy array, index 1 is % no stutter, index 1 is % stutter.
 
         Returns:
             An int.
         """
 
-        if output[0] > output[1]:
+        if(output[1] > output[0] and output[1] > 0.95):
             return 1
         else:
             return 0

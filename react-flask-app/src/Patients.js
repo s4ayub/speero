@@ -25,7 +25,6 @@ const styles = makeStyles(theme => ({
     backgroundPosition: '0 400px',
     marginTop: 20,
     padding: 20,
-    paddingBottom: 600
   },
   grid: {
     width: 1000
