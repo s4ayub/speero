@@ -7,10 +7,11 @@ import Grid from '@material-ui/core/Grid';
 import Skeleton from '@material-ui/lab/Skeleton';
 
 import DashboardMap from './DashboardMap.js';
+import DenseTable from './DenseTable.js';
 import { Doughnut, Line } from 'react-chartjs-2';
 import { useParams } from "react-router-dom";
-import CardMedia from '@material-ui/core/CardMedia';
 import ReactAudioPlayer from 'react-audio-player';
+import StickyHeadTable from './StickyHeadTable';
 
 const styles = makeStyles(theme => ({
   root: {
@@ -163,8 +164,13 @@ function Metrics(props) {
                         <div>
                             <Doughnut data={doughdata(metrics)} />
                             <br/>
-                            <Typography variant="subtitle3" gutterBottom>
-                                {getLatestTimestamp(metrics)}
+                            <Typography variant="subtitle2" gutterBottom>
+                                <strong>Date:</strong> {humanReadable(getLatestTimestamp(metrics))}
+                                <br/>
+                                <strong>Ranges that may include stutters:</strong> <br/>
+                                {getRanges(getLatestStutterSegment(metrics)).map(r => {
+                                    return <span>{r}, </span>;
+                                })}
                             </Typography>
                         </div>
                     )}
@@ -206,32 +212,13 @@ function Transcriptions(props) {
 
     useEffect(() => {
         fetch(`/transcription/${patientId}`).then(res => res.json()).then(data => {
-            debugger;
-        setTranscriptions(data);
+            setTranscriptions(data);
         });
     }, []);
 
     return (
         <Grid spacing={2} alignItems="flex-start" justify="center" container className={classes.grid}>
         <Grid item xs={12} md={6} >
-        <Paper className={classes.paper} style={{position: 'relative'}}>
-            <div >
-                <Typography variant="subtitle1" gutterBottom>
-                    <strong>Phrase Repetition</strong> - Most Recent Session
-                </Typography>
-                {transcriptions === 0 ? (
-                    <span>
-                        <Skeleton animation="wave" />
-                        <Skeleton animation="wave" />
-                        <Skeleton animation="wave" />
-                    </span>
-                ) : (
-                    <p>dfdf</p>
-                )}
-            </div>
-        </Paper>
-    </Grid>
-    <Grid item xs={12} md={6} >
         <Paper className={classes.paper} style={{position: 'relative'}}>
             <div >
                 <Typography variant="subtitle1" gutterBottom>
@@ -244,12 +231,48 @@ function Transcriptions(props) {
                         <Skeleton animation="wave" />
                     </span>
                 ) : (
-                    <p>dfdf</p>
+                    <DenseTable wr={transcriptions.wr} />
                 )}
             </div>
         </Paper>
     </Grid>
-        </Grid>
+    <Grid item xs={12} md={6} >
+        <Paper className={classes.paper} style={{position: 'relative'}}>
+            <div >
+                <Typography variant="subtitle1" gutterBottom>
+                    <strong>Phrase Repetition</strong> - Most Recent Session
+                </Typography>
+                {transcriptions === 0 ? (
+                    <span>
+                        <Skeleton animation="wave" />
+                        <Skeleton animation="wave" />
+                        <Skeleton animation="wave" />
+                    </span>
+                ) : (
+                    <DenseTable wr={transcriptions.pr} />
+                )}
+            </div>
+        </Paper>
+    </Grid>
+    <Grid item xs={12} md={12} >
+        <Paper className={classes.paper} style={{position: 'relative'}}>
+            <div >
+                <Typography variant="subtitle1" gutterBottom>
+                    <strong>Full transcription</strong> - Most Recent Session
+                </Typography>
+                {transcriptions === 0 ? (
+                    <span>
+                        <Skeleton animation="wave" />
+                        <Skeleton animation="wave" />
+                        <Skeleton animation="wave" />
+                    </span>
+                ) : (
+                    <StickyHeadTable transcription={transcriptions.transcription} />
+                )}
+            </div>
+        </Paper>
+    </Grid>
+    </Grid>
     );
 }
 
@@ -269,8 +292,6 @@ function SessionAudio() {
         <div>
             <Typography variant="subtitle2" gutterBottom>
                 <br />
-                <br />
-                <br />
                 <strong>Audio</strong>
                 <hr/>
                 <br />
@@ -289,6 +310,13 @@ function SessionAudio() {
     );
 }
 
+function humanReadable(s) {
+    const d = s.substring(0, s.length-16);
+    const t = s.substring(12, s.length-10);
+
+    return d + " at " + t.replace("-", ":");
+}
+
 function getLatestScore(metrics) {
     const keys = Object.keys(metrics).map(x => parseInt(x));
     const latestKey = Math.max(...keys);
@@ -303,6 +331,22 @@ function getLatestTimestamp(metrics) {
     return metrics[latestKey].session_timestamp;
 }
 
+function getLatestStutterSegment(metrics) {
+    const keys = Object.keys(metrics).map(x => parseInt(x));
+    const latestKey = Math.max(...keys);
+
+    return metrics[latestKey].stutter_segments;
+}
+
+function getRanges(stutter_segments) {
+    const starts = stutter_segments.split("-");
+    return starts.map(s => {
+        let s_t = parseInt(s)*4;
+        let e_t = s_t + 4;
+
+        return s_t.toString() + "s" + "-" + e_t + "s";
+    });
+}
 
 const linedata = metrics => {
     const allKeys= Object.keys(metrics).sort();

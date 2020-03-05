@@ -64,7 +64,6 @@ function Patients(props) {
                                         theme={props.theme}
                                         name={r.name}
                                         at={r.lastSession}
-                                        lastReading={Percent(r.lastScore)}
                                         patientId={r.patientId}
                                         name={r.name}
                                         linkto={`${path}/${r.patientId}`}
