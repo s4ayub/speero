@@ -93,14 +93,6 @@ function PatientItem(props) {
                   {patientId}
                 </Typography>
               </div>
-              <div className={classes.inline}>
-                <Typography style={{ textTransform: 'uppercase' }} color='primary' gutterBottom>
-                  Last Score
-                </Typography>
-                <Typography variant="h6" gutterBottom>
-                  <span style={{color: pink['700']}}>{`${lastReading} %`}</span>
-                </Typography>
-              </div>
               { at && (
               <div className={classes.inline}>
                 <Typography style={{ textTransform: 'uppercase' }} color='primary' gutterBottom>
