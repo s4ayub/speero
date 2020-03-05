@@ -24,7 +24,7 @@ sclient_config = {
 sclient = speech_v1.SpeechClient()
 p = MyPredictor.from_path(".")
 
-@app.route("/patients/<patient_id>")
+@app.route("/metric/<patient_id>")
 def get_patient_metrics(patient_id):
     patient_dir = "data/%s/" % (patient_id)
     latest_recorded_audio_path = get_latest_file_in_dir(

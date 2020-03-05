@@ -86,8 +86,8 @@ function Metrics() {
     const [metrics, setMetrics] = useState(0);
 
     useEffect(() => {
-      fetch(`/patients/${patientId}`).then(res => res.json()).then(data => {
-        debugger;
+      fetch(`/metric/${patientId}`).then(res => res.json()).then(data => {
+        console.log(data);
         setMetrics(data);
       });
     }, []);
@@ -114,7 +114,6 @@ function Metrics() {
 
     useEffect(() => {
       fetch(`/transcription/${patientId}`).then(res => res.json()).then(data => {
-        debugger;
         setTranscriptions(data);
       });
     }, []);
@@ -140,13 +139,11 @@ function Metrics() {
 
     useEffect(() => {
       fetch(`/audio/${patientId}`).then(res => res.json()).then(data => {
-        debugger;
         setEncodedAudio(data);
       });
     }, []);
 
     function playAudio(json_base64string) {
-      debugger;
       var snd = new Audio("data:audio/wav;base64," + json_base64string.substring(2, json_base64string.length-1));
       snd.play();
     };
