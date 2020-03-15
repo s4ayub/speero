@@ -17,8 +17,8 @@ app = Flask(__name__)
 audio_path_in_gcloud = 'gs://speeroaibucket/audio/'
 sclient_config = {
     "enable_word_time_offsets": True,
-    "language_code": "en-GB",
-    "sample_rate_hertz": 44100,
+    "language_code": "en-US",
+    "sample_rate_hertz": 48000,
 }
 
 sclient = speech_v1.SpeechClient()
