@@ -14,7 +14,7 @@ from MyPredictor import MyPredictor
 
 app = Flask(__name__)
 
-audio_path_in_gcloud = 'gs://speeroai/audio/'
+audio_path_in_gcloud = 'gs://speeroaibucket/audio/'
 sclient_config = {
     "enable_word_time_offsets": True,
     "language_code": "en-GB",
