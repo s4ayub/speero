@@ -153,7 +153,7 @@ function Metrics(props) {
             <Grid item xs={12} md={4}>
                 <Paper className={classes.paper} style={{position: 'relative'}}>
                     <Typography variant="subtitle1" gutterBottom>
-                        <strong>Sound Repetition</strong> - Most Recent Session
+                        Most Recent Session
                     </Typography>
                     {metrics === 0 ? (
                         <span>
@@ -168,9 +168,13 @@ function Metrics(props) {
                             <Typography variant="subtitle2" gutterBottom>
                                 <strong>Date:</strong> {humanReadable(getLatestTimestamp(metrics))}
                                 <br/>
-                                <strong>Ranges that may include stutters:</strong> <br/>
+                                <strong>Ranges that may include sound repetition:</strong> <br/>
                                 {getRanges(getLatestStutterSegment(metrics)).map(r => {
-                                    return <span>{r}, </span>;
+                                    if(r == "None!") {
+                                        return <span>{r}</span>;
+                                    } else {
+                                        return <span>{r},</span>;
+                                    }
                                 })}
                             </Typography>
                         </div>
@@ -182,7 +186,7 @@ function Metrics(props) {
                 <Paper className={classes.paper} style={{position: 'relative'}}>
                     <div >
                         <Typography variant="subtitle1" gutterBottom>
-                            <strong>Sound Repetition</strong> - Historical Data
+                            Historical Data
                         </Typography>
                         {metrics === 0 ? (
                             <span>
@@ -340,13 +344,17 @@ function getLatestStutterSegment(metrics) {
 }
 
 function getRanges(stutter_segments) {
-    const starts = stutter_segments.split("-");
-    return starts.map(s => {
-        let s_t = parseInt(s)*4;
-        let e_t = s_t + 4;
+    if(stutter_segments == "lying") {
+        return ["None!"];
+    } else {
+        const starts = stutter_segments.split("-");
+        return starts.map(s => {
+            let s_t = parseInt(s)*4;
+            let e_t = s_t + 4;
 
-        return s_t.toString() + "s" + "-" + e_t + "s";
-    });
+            return s_t.toString() + "s" + "-" + e_t + "s";
+        });
+    }
 }
 
 const linedata = metrics => {
@@ -364,7 +372,7 @@ const linedata = metrics => {
         labels: allLabels,
         datasets: [
         {
-            label: "% of audio without sound repetition",
+            label: "% of audio without stutters",
             data: allData,
             borderColor: "#2979FF",
             backgroundColor: "rgba(225, 228, 232, 0.5)",
@@ -414,7 +422,7 @@ const doughdata = metrics => {
             backgroundColor: ["#EA1E63", "#2979FF"],
         }],
         labels: [
-            'Sound Repetition',
+            'Stutters',
             'No Sound Repetition'
         ]
     };

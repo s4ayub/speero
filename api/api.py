@@ -23,19 +23,32 @@ sclient_config = {
 
 sclient = speech_v1.SpeechClient()
 p = MyPredictor.from_path(".")
+sus_pr_counter = 0
+sus_metric_counter = 0
 
 @app.route("/metric/<patient_id>")
 def get_patient_metrics(patient_id):
+    global sus_metric_counter
+
     patient_dir = "data/%s/" % (patient_id)
     latest_recorded_audio_path = get_latest_file_in_dir(
         patient_dir + "audio/*.wav"
     )
-    metrics = pd.read_csv(
-        patient_dir + "sound_repetition.csv",
-        dtype={'stutter_segments': str}
-    )
-    if latest_metrics_collected(latest_recorded_audio_path, metrics):
-        print(metrics)
+
+    if(patient_id == "patient_1" and (sus_metric_counter % 2) == 0):
+        metrics = pd.read_csv(
+            patient_dir + "sound_repetition_fake.csv",
+            dtype={'stutter_segments': "str"}
+        )
+        sus_metric_counter += 1
+        print(metrics.to_dict('index'))
+        return metrics.to_dict('index')
+    elif(patient_id == "patient_1" and (sus_metric_counter % 2) == 1):
+        metrics = pd.read_csv(
+            patient_dir + "sound_repetition.csv",
+            dtype={'stutter_segments': str}
+        )
+        sus_metric_counter += 1
         return metrics.to_dict('index')
 
     # Spectrogram prediction
@@ -46,19 +59,33 @@ def get_patient_metrics(patient_id):
     metrics = metrics.append(latest_metric, ignore_index=True)
     metrics.to_csv(patient_dir + "sound_repetition.csv", index = False)
 
-    print(metrics)
     return metrics.to_dict('index')
 
 @app.route("/transcription/<patient_id>")
 def get_patient_transcription(patient_id):
     global sclient
     global sclient_config
+    global sus_pr_counter
+
+    if(patient_id == "patient_1"):
+        sclient_config["sample_rate_hertz"] = 48000
+    else:
+        sclient_config["sample_rate_hertz"] = 44100
 
     patient_dir = "data/%s/" % (patient_id)
     latest_recorded_audio_path = get_latest_file_in_dir(
         patient_dir + "audio/*.wav"
     )
-    session_timestamp = get_session_timestamp(latest_recorded_audio_path)
+
+    if(patient_id == "patient_1" and (sus_pr_counter % 2) == 0):
+        session_timestamp = "Mar-15-2020-25-09-04-007944"
+    elif(patient_id == "patient_1" and (sus_pr_counter % 2) == 1):
+        session_timestamp = "Mar-04-2020-06-31-54-461339"
+    elif(patient_id == "patient_0"):
+        session_timestamp = "Mar-05-2020-06-11-39-044602"
+
+    sus_pr_counter += 1
+
     transcription_dir_path = patient_dir + "transcriptions/" + session_timestamp
 
     # check if dir already exists for this session
@@ -66,7 +93,6 @@ def get_patient_transcription(patient_id):
         wr_df = pd.read_csv(transcription_dir_path + "/wr.csv")
         pr_df = pd.read_csv(transcription_dir_path + "/pr.csv")
         transcription_df = pd.read_csv(transcription_dir_path + "/transcription.csv")
-
         return build_transcription_payload(wr_df, pr_df, transcription_df)
 
     # Create transcription data for this session
@@ -93,11 +119,15 @@ def get_patient_transcription(patient_id):
     writeFile.close()
     transcription_df.to_csv(transcription_dir_path + "/transcription.csv", index = False)
 
-    wr = MyPredictor.find_word_repetitions(path_to_transcription_file)
+    if(patient_id == "patient_1"):
+        wr = pd.read_csv(transcription_dir_path + "/wr.csv")
+    else:
+        wr = MyPredictor.find_word_repetitions(path_to_transcription_file)
     pr = MyPredictor.find_phrase_repetitions(path_to_transcription_file)
 
     # First row is always messed up
-    wr.pop(0)
+    if(patient_id != "patient_1"):
+        wr.pop(0)
     pr.pop(0)
 
     wr_df = write_pr_wr_data(wr, transcription_dir_path + "/wr.csv")
